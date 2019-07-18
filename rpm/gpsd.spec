@@ -1,22 +1,21 @@
 Name:           gpsd
-Version:        2.96
+Version:        3.19
 Release:        0
 Summary:        Service daemon for mediating access to a GPS
 License:        BSD-3-Clause
-Group:          Hardware/Other
+Group:          Location/Location Framework
 Url:            http://www.catb.org/gpsd/
 Source0:        http://download-mirror.savannah.gnu.org/releases/gpsd/%{name}-%{version}.tar.gz
 Source1:        gpsd.service
-Patch1:         gpsd-2.96-glibc2.26.patch
 BuildRequires:  chrpath
 BuildRequires:  fdupes
 BuildRequires:  libcap-devel
 BuildRequires:  ncurses-devel
 BuildRequires:  pkgconfig
-BuildRequires:  autoconf
+BuildRequires:  scons
 BuildRequires:  dbus-devel dbus-glib-devel
 BuildRequires:  pkgconfig(libusb-1.0)
-BuildRequires:  pkgconfig(python2)
+BuildRequires:  pkgconfig(python3)
 BuildRequires:  pkgconfig(udev)
 Requires:       udev
 
@@ -38,20 +37,6 @@ The daemon will be quiescent when there are no clients asking for
 location information, and copes gracefully when the GPS is unplugged
 and replugged.
 
-%package devel
-Summary:        Client libraries in C and Python for talking to a running gpsd or GPS
-Group:          Development/Libraries/C and C++
-Requires:       libgps
-Requires:       %{name} = %{version}
-Requires:       pkgconfig
-Requires:       python-curses
-Requires:       python-gpsd = %{version}
-
-%description devel
-This package provides C header files for the gpsd shared libraries that
-manage access to a GPS for applications and debugging tools. You will
-need to have gpsd installed for it to work.
-
 %package -n libgps
 Summary:        Shared library for GPS applications
 Group:          System/Libraries
@@ -69,64 +54,67 @@ Requires:       libgps = %{version}
 This package provides the development files for gpsd and other GPS aware
 applications.
 
-%package -n python-gpsd
-Summary:        Client libraries in C and Python for talking to a running gpsd or GPS
-Group:          Development/Libraries/Python
-Requires:       %{name} = %{version}
-Provides:       python-gpsd = %{version}-%{release}
-Obsoletes:      python-gpsd < %{version}-%{release}
-
-%description -n python-gpsd
-This package provides python modules and tools for the gpsd shared libraries.
-You will need to have gpsd installed for it to work.
-
-
 %package clients
-Summary:        Clients for gpsd with an X interface
+Summary:        Clients for gpsd
 Group:          Hardware/Other
-Requires:       python-gpsd
 
 %description clients
-xgps is a simple test client for gpsd with an X interface. It displays
-current GPS position/time/velocity information and (for GPSes that
+gpsdmon is a simple test client for gpsd. It displays current
+GPS position/time/velocity information and (for GPSes that
 support the feature) the locations of accessible satellites.
-
-xgpsspeed is a speedometer that uses position information from the GPS.
-It accepts an -h option and optional argument as for gps, or a -v
-option to dump the package version and exit. Additionally, it accepts
--rv (reverse video) and -nc (needle color) options.
-
-cgps resembles xgps, but without the pictorial satellite display.  It
-can run on a serial terminal or terminal emulator.
 
 %prep
 %setup -q -n %{name}-%{version}/upstream
-%patch1 -p1
 
 %build
-./autogen.sh
-%configure --enable-dbus
-make %{?_smp_mflags}
+scons %{_smp_mflags}          	\
+    prefix=/                  	\
+    bindir=%{_bindir}         	\
+    includedir=%{_includedir} 	\
+    libdir=%{_libdir}         	\
+    sbindir=%{_sbindir}       	\
+    mandir=%{_mandir}         	\
+    docdir=%{_docdir}         	\
+    target_python=python3     	\
+    dbus_export=yes            	\
+    systemd=yes 		\
+    debug=yes 			\
+    leapfetch=no 		\
+    python_libdir=%{python3_sitearch} \
+    pkgconfigdir=%{_libdir}/pkgconfig
+
+# Fix python interpreter path.
+sed -e "s,#!/usr/bin/\(python[23]\?\|env \+python[23]\?\),#!/usr/bin/python3,g" -i \
+    gegps gpscat gpsfake xgps xgpsspeed gpsprof gps/*.py ubxtool zerk
 
 %install
-%makeinstall
+rm -rf $RPM_BUILD_ROOT
+export DESTDIR=$RPM_BUILD_ROOT
+scons install
+
 mkdir -p %{buildroot}/lib/systemd/system/multi-user.target.wants/
 
 install -D -m 644 %{SOURCE1} %{buildroot}/lib/systemd/system/gpsd.service
 ln -s ../gpsd.service %{buildroot}/lib/systemd/system/multi-user.target.wants/gpsd.service
 
-%post -p /sbin/ldconfig
-%postun -p /sbin/ldconfig
-
 %post -n libgps -p /sbin/ldconfig
 %postun -n libgps -p /sbin/ldconfig
+
+%post
+%systemd_post gpsd.service gpsd.socket
+
+%preun
+%systemd_preun gpsd.service gpsd.socket
+
+%postun
+# Don't restart the service
+%systemd_postun gpsd.service gpsd.socket
 
 %files
 /lib/systemd/system/gpsd.service
 /lib/systemd/system/multi-user.target.wants/gpsd.service
 %{_sbindir}/gpsd
-%{_bindir}/gpsctl
-%{_libdir}/libgpsd.so.*
+%{_sbindir}/gpsdctl
 
 %files -n libgps
 %{_libdir}/libgps.so.*
@@ -135,29 +123,24 @@ ln -s ../gpsd.service %{buildroot}/lib/systemd/system/multi-user.target.wants/gp
 %{_includedir}/gps.h
 %{_includedir}/libgpsmm.h
 %{_libdir}/libgps.so
-%{_libdir}/libgps.a
-%{_libdir}/libgps.la
 %{_libdir}/pkgconfig/libgps.pc
 
-%files devel
-%{_bindir}/gpsfake
-%{_bindir}/gpscat
-%{_bindir}/gpsdecode
-%{_bindir}/gpsprof
-%{_includedir}/gpsd.h
-%{_libdir}/libgpsd.so
-%{_libdir}/libgpsd.a
-%{_libdir}/libgpsd.la
-%{_libdir}/pkgconfig/libgpsd.pc
-
-%files -n python-gpsd
-%{_libdir}/python2.7/
 
 %files clients
+%{_bindir}/gpsdecode
 %{_bindir}/cgps
-%{_bindir}/lcdgps
+%{_bindir}/gegps
+%{_bindir}/ubxtool
+%{_bindir}/zerk
+%{_bindir}/gpsfake
+%{_bindir}/gpscat
+%{_bindir}/gpsprof
+%{_bindir}/gps2udp
+%{_bindir}/gpsctl
 %{_bindir}/gpsmon
 %{_bindir}/gpspipe
+%{_bindir}/gpsrinex
 %{_bindir}/gpxlogger
-%{_bindir}/xgps
-%{_bindir}/xgpsspeed
+%{_bindir}/lcdgps
+%{_bindir}/ntpshmmon
+%{_bindir}/ppscheck
