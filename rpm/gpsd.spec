@@ -3,9 +3,8 @@ Version:        3.19
 Release:        0
 Summary:        Service daemon for mediating access to a GPS
 License:        BSD-3-Clause
-Group:          Location/Location Framework
 Url:            http://www.catb.org/gpsd/
-Source0:        http://download-mirror.savannah.gnu.org/releases/gpsd/%{name}-%{version}.tar.gz
+Source0:        %{name}-%{version}.tar.gz
 Source1:        gpsd.service
 BuildRequires:  chrpath
 BuildRequires:  fdupes
@@ -15,7 +14,6 @@ BuildRequires:  pkgconfig
 BuildRequires:  scons
 BuildRequires:  dbus-devel dbus-glib-devel
 BuildRequires:  pkgconfig(libusb-1.0)
-BuildRequires:  pkgconfig(python3)
 BuildRequires:  pkgconfig(udev)
 Requires:       udev
 
@@ -39,7 +37,6 @@ and replugged.
 
 %package -n libgps
 Summary:        Shared library for GPS applications
-Group:          System/Libraries
 
 %description -n libgps
 This package provides the shared library for gpsd and other GPS aware
@@ -47,7 +44,6 @@ applications.
 
 %package -n libgps-devel
 Summary:        Shared library for GPS applications development files
-Group:          Development/Libraries
 Requires:       libgps = %{version}
 
 %description -n libgps-devel
@@ -56,7 +52,6 @@ applications.
 
 %package clients
 Summary:        Clients for gpsd
-Group:          Hardware/Other
 
 %description clients
 gpsdmon is a simple test client for gpsd. It displays current
@@ -64,7 +59,7 @@ GPS position/time/velocity information and (for GPSes that
 support the feature) the locations of accessible satellites.
 
 %prep
-%setup -q -n %{name}-%{version}/upstream
+%autosetup -n %{name}-%{version}/upstream
 
 %build
 scons %{_smp_mflags}          	\
@@ -75,12 +70,10 @@ scons %{_smp_mflags}          	\
     sbindir=%{_sbindir}       	\
     mandir=%{_mandir}         	\
     docdir=%{_docdir}         	\
-    target_python=python3     	\
     dbus_export=yes            	\
     systemd=yes 		\
     debug=yes 			\
     leapfetch=no 		\
-    python_libdir=%{python3_sitearch} \
     pkgconfigdir=%{_libdir}/pkgconfig
 
 # Fix python interpreter path.
@@ -124,7 +117,6 @@ ln -s ../gpsd.service %{buildroot}/lib/systemd/system/multi-user.target.wants/gp
 %{_includedir}/libgpsmm.h
 %{_libdir}/libgps.so
 %{_libdir}/pkgconfig/libgps.pc
-
 
 %files clients
 %{_bindir}/gpsdecode
