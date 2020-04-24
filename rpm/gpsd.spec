@@ -14,6 +14,7 @@ BuildRequires:  pkgconfig
 BuildRequires:  scons
 BuildRequires:  dbus-devel dbus-glib-devel
 BuildRequires:  pkgconfig(libusb-1.0)
+BuildRequires:  pkgconfig(python3)
 BuildRequires:  pkgconfig(udev)
 Requires:       udev
 
@@ -41,6 +42,14 @@ Summary:        Shared library for GPS applications
 %description -n libgps
 This package provides the shared library for gpsd and other GPS aware
 applications.
+
+%package -n python3-%{name}
+Summary:        Python libraries and modules for use with gpsd
+Requires:       libgps = %{version}
+
+%description -n python3-%{name}
+This package contains the python3 modules that manage access to a GPS for
+applications, and commonly useful python applications for use with gpsd.
 
 %package -n libgps-devel
 Summary:        Shared library for GPS applications development files
@@ -70,10 +79,12 @@ scons %{_smp_mflags}          	\
     sbindir=%{_sbindir}       	\
     mandir=%{_mandir}         	\
     docdir=%{_docdir}         	\
+    target_python=python3     	\
     dbus_export=yes            	\
     systemd=yes 		\
     debug=yes 			\
     leapfetch=no 		\
+    python_libdir=%{python3_sitearch} \
     pkgconfigdir=%{_libdir}/pkgconfig
 
 # Fix python interpreter path.
@@ -112,6 +123,12 @@ ln -s ../gpsd.service %{buildroot}/lib/systemd/system/multi-user.target.wants/gp
 %files -n libgps
 %{_libdir}/libgps.so.*
 
+%files -n python3-%{name}
+%{_bindir}/gpsprof
+%{python3_sitearch}/gps*
+%exclude %{python3_sitearch}/gps/fake*
+%exclude %{python3_sitearch}/gps/__pycache__/fake*
+
 %files -n libgps-devel
 %{_includedir}/gps.h
 %{_includedir}/libgpsmm.h
@@ -126,7 +143,6 @@ ln -s ../gpsd.service %{buildroot}/lib/systemd/system/multi-user.target.wants/gp
 %{_bindir}/zerk
 %{_bindir}/gpsfake
 %{_bindir}/gpscat
-%{_bindir}/gpsprof
 %{_bindir}/gps2udp
 %{_bindir}/gpsctl
 %{_bindir}/gpsmon
