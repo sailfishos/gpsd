@@ -1,5 +1,5 @@
 Name:           gpsd
-Version:        3.19
+Version:        3.22
 Release:        0
 Summary:        Service daemon for mediating access to a GPS
 License:        BSD-3-Clause
@@ -79,27 +79,25 @@ scons %{_smp_mflags}          	\
     sbindir=%{_sbindir}       	\
     mandir=%{_mandir}         	\
     docdir=%{_docdir}         	\
-    target_python=python3     	\
     dbus_export=yes            	\
     systemd=yes 		\
     debug=yes 			\
     leapfetch=no 		\
-    python_libdir=%{python3_sitearch} \
-    pkgconfigdir=%{_libdir}/pkgconfig
-
-# Fix python interpreter path.
-sed -e "s,#!/usr/bin/\(python[23]\?\|env \+python[23]\?\),#!/usr/bin/python3,g" -i \
-    gegps gpscat gpsfake xgps xgpsspeed gpsprof gps/*.py ubxtool zerk
+    xgps=no             \
+    pkgconfigdir=%{_libdir}/pkgconfig \
+    target_python=python3 \
+    python_shebang=%{python3} \
+    python_libdir=%{python3_sitearch}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 export DESTDIR=$RPM_BUILD_ROOT
 scons install
 
-mkdir -p %{buildroot}/lib/systemd/system/multi-user.target.wants/
+mkdir -p %{buildroot}/%{_unitdir}/multi-user.target.wants/
 
-install -D -m 644 %{SOURCE1} %{buildroot}/lib/systemd/system/gpsd.service
-ln -s ../gpsd.service %{buildroot}/lib/systemd/system/multi-user.target.wants/gpsd.service
+install -D -m 644 %{SOURCE1} %{buildroot}%{_unitdir}/gpsd.service
+ln -s ../gpsd.service %{buildroot}/%{_unitdir}/multi-user.target.wants/gpsd.service
 
 %post -n libgps -p /sbin/ldconfig
 %postun -n libgps -p /sbin/ldconfig
@@ -113,18 +111,19 @@ ln -s ../gpsd.service %{buildroot}/lib/systemd/system/multi-user.target.wants/gp
 %postun
 # Don't restart the service
 %systemd_postun gpsd.service gpsd.socket
-
 %files
-/lib/systemd/system/gpsd.service
-/lib/systemd/system/multi-user.target.wants/gpsd.service
+%{_unitdir}/gpsd.service
+%{_unitdir}/multi-user.target.wants/gpsd.service
 %{_sbindir}/gpsd
 %{_sbindir}/gpsdctl
+%exclude %{_docdir}/*
+%exclude /share/gpsd/icons/gpsd-logo.png
 
 %files -n libgps
 %{_libdir}/libgps.so.*
 
 %files -n python3-%{name}
-%{_bindir}/gpsprof
+%{_libdir}/libgpsdpacket.so*
 %{python3_sitearch}/gps*
 %exclude %{python3_sitearch}/gps/fake*
 %exclude %{python3_sitearch}/gps/__pycache__/fake*
@@ -147,8 +146,14 @@ ln -s ../gpsd.service %{buildroot}/lib/systemd/system/multi-user.target.wants/gp
 %{_bindir}/gpsctl
 %{_bindir}/gpsmon
 %{_bindir}/gpspipe
+%{_bindir}/gpsprof
 %{_bindir}/gpsrinex
 %{_bindir}/gpxlogger
 %{_bindir}/lcdgps
 %{_bindir}/ntpshmmon
 %{_bindir}/ppscheck
+%{_bindir}/gpscsv
+%{_bindir}/gpsplot
+%{_bindir}/gpssubframe
+%exclude %{_bindir}/xgps
+%exclude %{_bindir}/xgpsspeed
