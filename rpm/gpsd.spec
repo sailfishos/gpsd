@@ -1,9 +1,9 @@
 Name:           gpsd
-Version:        3.22
+Version:        3.23
 Release:        0
 Summary:        Service daemon for mediating access to a GPS
 License:        BSD-3-Clause
-Url:            http://www.catb.org/gpsd/
+Url:            https://gpsd.gitlab.io/gpsd/
 Source0:        %{name}-%{version}.tar.gz
 Source1:        gpsd.service
 BuildRequires:  chrpath
