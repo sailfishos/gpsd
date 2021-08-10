@@ -144,10 +144,12 @@ ln -s ../gpsd.service %{buildroot}/%{_unitdir}/multi-user.target.wants/gpsd.serv
 %{_bindir}/gpscat
 %{_bindir}/gps2udp
 %{_bindir}/gpsctl
+%{_bindir}/gpsdebuginfo
 %{_bindir}/gpsmon
 %{_bindir}/gpspipe
 %{_bindir}/gpsprof
 %{_bindir}/gpsrinex
+%{_bindir}/gpssnmp
 %{_bindir}/gpxlogger
 %{_bindir}/lcdgps
 %{_bindir}/ntpshmmon
