@@ -1,9 +1,9 @@
 Name:           gpsd
-Version:        3.23
+Version:        3.26.1
 Release:        0
 Summary:        Service daemon for mediating access to a GPS
 License:        BSD-3-Clause
-Url:            https://gpsd.gitlab.io/gpsd/
+Url:            https://github.com/sailfishos/gpsd/
 Source0:        %{name}-%{version}.tar.gz
 Source1:        gpsd.service
 BuildRequires:  chrpath
@@ -71,26 +71,26 @@ support the feature) the locations of accessible satellites.
 %autosetup -n %{name}-%{version}/upstream
 
 %build
-scons %{_smp_mflags}          	\
-    prefix=/                  	\
-    bindir=%{_bindir}         	\
-    includedir=%{_includedir} 	\
-    libdir=%{_libdir}         	\
-    sbindir=%{_sbindir}       	\
-    mandir=%{_mandir}         	\
-    docdir=%{_docdir}         	\
-    dbus_export=yes            	\
-    systemd=yes 		\
-    debug=yes 			\
-    leapfetch=no 		\
-    xgps=no             \
+scons %{_smp_mflags} \
+    prefix=/ \
+    bindir=%{_bindir} \
+    includedir=%{_includedir} \
+    libdir=%{_libdir} \
+    sbindir=%{_sbindir} \
+    mandir=%{_mandir} \
+    mibdir=%{_docdir}/gpsd \
+    docdir=%{_docdir} \
+    dbus_export=yes \
+    systemd=yes \
+    debug=yes \
+    leapfetch=no \
+    xgps=no \
     pkgconfigdir=%{_libdir}/pkgconfig \
     target_python=python3 \
     python_shebang=%{python3} \
     python_libdir=%{python3_sitearch}
 
 %install
-rm -rf $RPM_BUILD_ROOT
 export DESTDIR=$RPM_BUILD_ROOT
 scons install
 
@@ -136,6 +136,7 @@ ln -s ../gpsd.service %{buildroot}/%{_unitdir}/multi-user.target.wants/gpsd.serv
 
 %files clients
 %{_bindir}/gpsdecode
+%{_bindir}/gpslogntp
 %{_bindir}/cgps
 %{_bindir}/gegps
 %{_bindir}/ubxtool
