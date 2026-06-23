@@ -18,6 +18,8 @@ BuildRequires:  pkgconfig(python3)
 BuildRequires:  pkgconfig(udev)
 Requires:       udev
 
+Patch1: gpsd_config.patch
+
 %description
 gpsd is a service daemon that mediates access to a GPS sensor connected
 to the host computer by serial or USB interface, making its data on the
@@ -131,6 +133,7 @@ ln -s ../gpsd.service %{buildroot}/%{_unitdir}/multi-user.target.wants/gpsd.serv
 %files -n libgps-devel
 %{_includedir}/gps.h
 %{_includedir}/libgpsmm.h
+%{_includedir}/gpsd_config.h
 %{_libdir}/libgps.so
 %{_libdir}/pkgconfig/libgps.pc
 

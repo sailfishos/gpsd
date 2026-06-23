@@ -1,0 +1,11 @@
+--- a/SConscript
++++ b/SConscript
+@@ -2641,7 +2641,7 @@
+ # It's deliberate that we don't install gpsd.h. It's full of internals that
+ # third-party client programs should not see.
+ headerinstall = [env.Install(installdir('includedir'), x)
+-                 for x in ("include/libgpsmm.h", "include/gps.h")]
++                 for x in ("include/libgpsmm.h", "include/gpsd_config.h", "include/gps.h")]
+ 
+ binaryinstall = []
+ binaryinstall.append(env.Install(installdir('sbindir'), sbin_binaries))
