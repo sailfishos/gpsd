@@ -6,6 +6,7 @@ License:        BSD-3-Clause
 Url:            https://github.com/sailfishos/gpsd/
 Source0:        %{name}-%{version}.tar.gz
 Source1:        gpsd.service
+Patch0:         0001-SConscript-Do-not-force-_TIME_BITS-on-a-32-bit-system.patch
 BuildRequires:  chrpath
 BuildRequires:  fdupes
 BuildRequires:  libcap-devel
@@ -68,7 +69,7 @@ GPS position/time/velocity information and (for GPSes that
 support the feature) the locations of accessible satellites.
 
 %prep
-%autosetup -n %{name}-%{version}/upstream
+%autosetup -p1 -n %{name}-%{version}/upstream
 
 %build
 scons %{_smp_mflags} \
